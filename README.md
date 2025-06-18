@@ -43,7 +43,7 @@ src/
 
    ```bash
    npm install
-````
+   ```
 
 2. **Start the development server**
 
