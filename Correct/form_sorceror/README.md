@@ -1,65 +1,100 @@
-# Docker Dev Env for JS
+# Multi-Step Form Wizard (React + Vite + Tailwind)
 
-# Running tests
+This is a modular, undoable multi-step form wizard built with React, Vite, and Tailwind CSS. It supports undo/redo, local persistence, and a clean submission confirmation screen.
 
-This command builds a docker image with the code of this repository and runs the repository's tests
+## Features
 
-```sh
-./build_docker.sh my_app
-docker run -t my_app ./run_tests.sh
+- Multi-step wizard navigation (Next / Back)
+- Progress indicator with step count and visual bar
+- Per-field undo and redo support
+- Autosaves progress to `localStorage`
+- Appends submitted entries to `localStorage`
+- Responsive layout styled with Tailwind CSS
+- Optional restart after successful submission
+
+## Technologies Used
+
+- React (functional components with hooks)
+- Vite (fast dev server and build)
+- Tailwind CSS (utility-first styling)
+- JavaScript (ES6+)
+
+## Project Structure
+
 ```
 
+src/
+├── components/
+│   ├── FormWizard.jsx
+│   ├── NavButtons.jsx
+│   ├── ProgressBar.jsx
+│   ├── StepForm.jsx
+│   ├── Field.jsx
+│   └── SubmissionSuccess.jsx
+├── App.jsx
+├── main.jsx
+└── index.css
+
+````
+
+## Getting Started (Local)
+
+1. **Install dependencies**
+
+   ```bash
+   npm install
+````
+
+2. **Start the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+3. **Build for production**
+
+   ```bash
+   npm run build
+   ```
+
+## Running the App with Docker
+
+You can run this app in a Docker container using the included scripts.
+
+### Run the App
+
+```bash
+. build_docker.sh form_sorceror && docker run --rm -it -p 5173:5173 form_sorceror ./run_dev.sh
 ```
-[+] Building 0.1s (10/10) FINISHED                                                                   docker:default
- => [internal] load build definition from Dockerfile                                                           0.0s
- => => transferring dockerfile: 226B                                                                           0.0s
- => [internal] load metadata for docker.io/library/node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d76  0.0s
- => [internal] load .dockerignore                                                                              0.0s
- => => transferring context: 154B                                                                              0.0s
- => [1/5] FROM docker.io/library/node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad0748  0.0s
- => [internal] load build context                                                                              0.0s
- => => transferring context: 1.07kB                                                                            0.0s
- => CACHED [2/5] WORKDIR /app                                                                                  0.0s
- => CACHED [3/5] COPY package.json package-lock.json .                                                         0.0s
- => CACHED [4/5] RUN npm install                                                                               0.0s
- => CACHED [5/5] COPY . .                                                                                      0.0s
- => exporting to image                                                                                         0.0s
- => => exporting layers                                                                                        0.0s
- => => writing image sha256:80007dbaeba9813527f4a4e663e6d773256f6e42f1b3c3fdf713fe45b4897c2f                   0.0s
- => => naming to docker.io/library/my_app                                                                      0.0s
 
+This will:
 
-> my-react-app@0.0.0 test
-> vitest
+* Build a Docker image called `form_sorceror`
+* Run the app with Vite on port `5173`
 
+### Run the Tests
 
- RUN  v3.1.1 /app
-
- ✓ src/App.test.jsx (2 tests) 176ms
- ✓ test/basic.test.js (3 tests) 6ms
- ✓ test/suite.test.js (3 tests) 7ms
-
- Test Files  3 passed (3)
-      Tests  8 passed (8)
-   Start at  22:08:27
-   Duration  3.74s (transform 93ms, setup 361ms, collect 282ms, tests 190ms, environment 1.95s, prepare 392ms)
+```bash
+. build_docker.sh form_sorceror && docker run --rm -it -p 5173:5173 form_sorceror ./run_tests.sh
 ```
 
-# Running a specific test
+This will:
 
-This example runs all tests matching the name "basic":
+* Build the same image
+* Run your test suite (e.g., using Vitest or Jest)
 
-```sh
-./build_docker.sh my_app
-docker run -t my_app ./run_tests.sh basic
+Make sure your `build_docker.sh`, `run_dev.sh`, and `run_tests.sh` are all present and executable.
+
+## Submission Storage
+
+Submissions are stored in browser `localStorage` under the key:
+
+```
+form_wizard_submissions
 ```
 
+Each submission includes a `submittedAt` timestamp.
 
-# Running a vite dev server
+## License
 
-Run this command to enable hot reloading via docker.
-
-```sh
-./build_docker.sh my_app
-docker run --network=host -v .:/app -it my_app npm exec vite dev --host
-```
+MIT License. You are free to use, modify, and distribute this code.
