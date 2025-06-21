@@ -1,129 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import StepForm          from './StepForm';
 import ProgressBar       from './ProgressBar';
 import NavButtons        from './NavButtons';
 import SubmissionSuccess from './SubmissionSuccess';
 import StepEditor        from './StepEditor';
-
-/* ----------  Default wizard definition (fallback)  ---------- */
-const DEFAULT_STEPS = [
-  {
-    id: 'step1',
-    title: 'Contact Info',
-    fields: [
-      { name: 'fullName', label: 'Full Name', type: 'text', required: true },
-      { name: 'email',    label: 'Email',     type: 'text', required: true }
-    ]
-  },
-  {
-    id: 'step2',
-    title: 'Details',
-    fields: [
-      { name: 'age',     label: 'Age',     type: 'number', required: true },
-      { name: 'country', label: 'Country', type: 'select',
-        options: ['USA', 'Canada'], required: true }
-    ]
-  }
-];
-
-const STEPS_STORAGE_KEY = 'form_wizard_steps';   // <— new
-const STATE_KEY         = 'form_wizard_state';
-const SUBMISSION_KEY    = 'form_wizard_submissions';
+import { useWizard }     from '../util/useWizard';
 
 export default function FormWizard() {
-  /* ----------  Load editable step config  ---------- */
-  const [steps, setSteps] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STEPS_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_STEPS;
-    } catch {
-      return DEFAULT_STEPS;
-    }
-  });
-
-  /* ----------  Wizard state  ---------- */
-  const [stepIndex, setStepIndex] = useState(0);
-  const [formData,  setFormData]  = useState({});
-  const [history,   setHistory]   = useState([]);
-  const [future,    setFuture]    = useState([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [editing,   setEditing]   = useState(false);
-
-  /* ----------  Draft persistence  ---------- */
-  useEffect(() => {
-    const saved = localStorage.getItem(STATE_KEY);
-    if (saved) {
-      const { stepIndex, formData } = JSON.parse(saved);
-      setStepIndex(stepIndex);
-      setFormData(formData);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!submitted) {
-      localStorage.setItem(
-        STATE_KEY,
-        JSON.stringify({ stepIndex, formData })
-      );
-    }
-  }, [stepIndex, formData, submitted]);
-
-  /* ----------  Field change + undo/redo  ---------- */
-  const handleFieldChange = (name, value) => {
-    setHistory((h) => [...h, formData]);
-    setFuture([]);
-    setFormData((f) => ({ ...f, [name]: value }));
-  };
-
-  const undo = () => {
-    if (!history.length) return;
-    setFuture((f) => [formData, ...f]);
-    setFormData(history[history.length - 1]);
-    setHistory((h) => h.slice(0, -1));
-  };
-
-  const redo = () => {
-    if (!future.length) return;
-    setHistory((h) => [...h, formData]);
-    setFormData(future[0]);
-    setFuture((f) => f.slice(1));
-  };
-
-  /* ----------  Navigation helpers  ---------- */
-  const nextStep = () => setStepIndex((i) => Math.min(i + 1, steps.length - 1));
-  const prevStep = () => setStepIndex((i) => Math.max(i - 1, 0));
-
-  /* ----------  Submit  ---------- */
-  const handleSubmit = () => {
-    const existing =
-      JSON.parse(localStorage.getItem(SUBMISSION_KEY) || '[]');
-    localStorage.setItem(
-      SUBMISSION_KEY,
-      JSON.stringify([...existing, { ...formData, submittedAt: Date.now() }])
-    );
-    localStorage.removeItem(STATE_KEY);
-    setSubmitted(true);
-  };
-
-  /* ----------  Restart  ---------- */
-  const restartWizard = () => {
-    setStepIndex(0);
-    setFormData({});
-    setHistory([]);
-    setFuture([]);
-    setSubmitted(false);
-  };
+  const {
+    // State
+    steps,
+    stepIndex,
+    formData,
+    submitted,
+    editing,
+    currentStep,
+    isLastStep,
+    totalSteps,
+    
+    // Navigation state
+    canGoBack,
+    canGoForward,
+    canUndo,
+    canRedo,
+    
+    // Actions
+    handleFieldChange,
+    nextStep,
+    prevStep,
+    undo,
+    redo,
+    handleSubmit,
+    restartWizard,
+    setEditing,
+    saveSteps
+  } = useWizard();
 
   /* ----------  Render flow  ---------- */
   if (editing) {
     return (
       <StepEditor
         initialSteps={steps}
-        onSave={(newSteps) => {
-          setSteps(newSteps);
-          setEditing(false);
-          restartWizard();           // reset progress on schema change
-        }}
+        onSave={saveSteps}
         onCancel={() => setEditing(false)}
       />
     );
@@ -132,9 +50,6 @@ export default function FormWizard() {
   if (submitted) {
     return <SubmissionSuccess onRestart={restartWizard} />;
   }
-
-  const currentStep = steps[stepIndex];
-  const isLastStep  = stepIndex === steps.length - 1;
 
   return (
     <div className="max-w-xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-lg">
@@ -149,7 +64,7 @@ export default function FormWizard() {
         </button>
       </div>
 
-      <ProgressBar current={stepIndex + 1} total={steps.length} />
+      <ProgressBar current={stepIndex + 1} total={totalSteps} />
 
       <StepForm
         key={currentStep.id}
@@ -160,15 +75,15 @@ export default function FormWizard() {
 
       <NavButtons
         /* navigation */
-        canGoBack={stepIndex > 0}
-        canGoForward={!isLastStep}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
         onBack={prevStep}
         onNext={nextStep}
         /* undo/redo */
         onUndo={undo}
         onRedo={redo}
-        canUndo={history.length > 0}
-        canRedo={future.length > 0}
+        canUndo={canUndo}
+        canRedo={canRedo}
         /* submit */
         isLastStep={isLastStep}
         onSubmit={handleSubmit}

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-
-const STEPS_STORAGE_KEY = 'form_wizard_steps';
+import { saveWizardSteps } from '../util/storage';
 
 export default function StepEditor({ initialSteps, onSave, onCancel }) {
   const [text, setText] = useState(JSON.stringify(initialSteps, null, 2));
@@ -9,7 +8,7 @@ export default function StepEditor({ initialSteps, onSave, onCancel }) {
   const handleSave = () => {
     try {
       const parsed = JSON.parse(text);
-      localStorage.setItem(STEPS_STORAGE_KEY, JSON.stringify(parsed));
+      saveWizardSteps(parsed);
       onSave(parsed);
     } catch (e) {
       setError('Invalid JSON – please fix and try again.');
