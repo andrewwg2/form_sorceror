@@ -1,25 +1,36 @@
-# Multi-Step Form Wizard (React + Vite + Tailwind)
+### Multi-Step Form Wizard (React + Vite + Tailwind)
 
-This is a modular, undoable multi-step form wizard built with React, Vite, and Tailwind CSS. It supports undo/redo, local persistence, and a clean submission confirmation screen.
+A modular, undoable multi-step form wizard.  
+Supports editable step definitions, undo/redo, draft persistence, and a clean submission confirmation screen.
 
-## Features
+---
+
+### Features
 
 - Multi-step wizard navigation (Next / Back)
 - Progress indicator with step count and visual bar
 - Per-field undo and redo support
-- Autosaves progress to `localStorage`
-- Appends submitted entries to `localStorage`
-- Responsive layout styled with Tailwind CSS
-- Optional restart after successful submission
+- Draft autosave to `localStorage`
+- Submission log stored in `localStorage`
+- JSON step editor – modify the wizard at runtime
+- Built with Immer for safe immutable updates
+- Responsive layout via Tailwind CSS
+- Docker-ready and test-ready configuration
 
-## Technologies Used
+---
 
-- React (functional components with hooks)
-- Vite (fast dev server and build)
-- Tailwind CSS (utility-first styling)
-- JavaScript (ES6+)
+### Technologies
 
-## Project Structure
+- React (hooks)
+- Immer (immutable state updates)
+- Vite (dev + build tool)
+- Tailwind CSS
+- JavaScript ES2022
+- Vitest / Testing-Library (unit tests)
+
+---
+
+### Project Structure
 
 ```
 
@@ -31,70 +42,63 @@ src/
 │   ├── StepForm.jsx
 │   ├── Field.jsx
 │   └── SubmissionSuccess.jsx
+├── util/
+│   ├── storage.js        # localStorage helpers
+│   └── useWizard.js      # custom hook (Immer + state logic)
+├── StepEditor.jsx        # in-app JSON editor
 ├── App.jsx
 ├── main.jsx
 └── index.css
 
 ````
 
-## Getting Started (Local)
+---
 
-1. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-2. **Start the development server**
-
-   ```bash
-   npm run dev
-   ```
-
-3. **Build for production**
-
-   ```bash
-   npm run build
-   ```
-
-## Running the App with Docker
-
-You can run this app in a Docker container using the included scripts.
-
-### Run the App
+### Local Development
 
 ```bash
-. build_docker.sh form_sorceror && docker run --rm -it -p 5173:5173 form_sorceror ./run_dev.sh
-```
+# install deps
+npm install
 
-This will:
+# start dev server (http://localhost:5173)
+npm run dev
 
-* Build a Docker image called `form_sorceror`
-* Run the app with Vite on port `5173`
+# production build
+npm run build
+````
 
-### Run the Tests
+---
+
+### Running with Docker
 
 ```bash
-. build_docker.sh form_sorceror && docker run --rm -it -p 5173:5173 form_sorceror ./run_tests.sh
+# build image + run dev server
+. build_docker.sh form_sorceror \
+  && docker run --rm -it -p 5173:5173 form_sorceror ./run_dev.sh
 ```
 
-This will:
-
-* Build the same image
-* Run your test suite (e.g., using Vitest or Jest)
-
-Make sure your `build_docker.sh`, `run_dev.sh`, and `run_tests.sh` are all present and executable.
-
-## Submission Storage
-
-Submissions are stored in browser `localStorage` under the key:
-
-```
-form_wizard_submissions
+```bash
+# build image + run tests
+. build_docker.sh form_sorceror \
+  && docker run --rm -it form_sorceror ./run_tests.sh
 ```
 
-Each submission includes a `submittedAt` timestamp.
+Scripts `build_docker.sh`, `run_dev.sh`, and `run_tests.sh` must be executable.
 
-## License
+---
 
-MIT License. You are free to use, modify, and distribute this code.
+### Step Editor & Persistence
+
+| Key                       | Purpose                                                                    |
+| ------------------------- | -------------------------------------------------------------------------- |
+| `form_wizard_steps`       | JSON array of step definitions saved via the in-app **Edit Steps** button. |
+| `form_wizard_state`       | Draft `{ stepIndex, formData }` autosaved after each change.               |
+| `form_wizard_submissions` | Array of submitted objects, each with `submittedAt` timestamp.             |
+
+If `form_wizard_steps` is absent, the wizard falls back to the hard-coded default in `useWizard.js`.
+
+---
+
+### License
+
+MIT – free to use, modify, and distribute.
